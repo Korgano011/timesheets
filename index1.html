@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Timesheets</title>
+
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -13,8 +14,16 @@
       background: #f7f7f8;
       color: #222;
     }
-    h1 { font-size: 1.6rem; }
-    h2 { font-size: 1.2rem; margin-top: 0; }
+
+    h1 {
+      font-size: 1.6rem;
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      margin-top: 0;
+    }
+
     section {
       background: #fff;
       border: 1px solid #ddd;
@@ -22,11 +31,13 @@
       padding: 16px;
       margin-bottom: 20px;
     }
+
     label {
       display: block;
       font-weight: 600;
       margin: 10px 0 4px;
     }
+
     input {
       width: 100%;
       box-sizing: border-box;
@@ -35,6 +46,7 @@
       border: 1px solid #bbb;
       border-radius: 4px;
     }
+
     button {
       margin-top: 12px;
       padding: 8px 16px;
@@ -45,55 +57,156 @@
       color: #fff;
       cursor: pointer;
     }
-    .status { margin-top: 10px; min-height: 1.2em; }
-    .status.error { color: #b91c1c; }
-    .status.ok { color: #15803d; }
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    th, td {
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .status {
+      margin-top: 10px;
+      min-height: 1.2em;
+    }
+
+    .status.error {
+      color: #b91c1c;
+    }
+
+    .status.ok {
+      color: #15803d;
+    }
+
+    .status.loading {
+      color: #555;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+
+    th,
+    td {
       border-bottom: 1px solid #e5e5e5;
       padding: 8px;
       text-align: left;
       vertical-align: top;
     }
-    th { background: #f0f0f2; }
-    #saveButton { background: #15803d; }
-    #saveButton:disabled { background: #9cc5aa; cursor: not-allowed; }
+
+    th {
+      background: #f0f0f2;
+    }
+
+    #saveButton {
+      background: #15803d;
+    }
+
+    #saveButton:disabled {
+      background: #9cc5aa;
+      cursor: not-allowed;
+    }
+
+    #addButton {
+      background: #2563eb;
+    }
+
+    .return-link {
+      margin-top: 20px;
+    }
+
+    .return-link a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+
+    .return-link a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
+
 <body>
 
   <h1>Timesheets</h1>
 
+  <!-- Add Row -->
   <section>
     <h2>Add a Row</h2>
+
     <form id="addForm">
+
       <label for="day">Day of the Week</label>
-      <input type="text" id="day" name="day" required>
+      <input
+        type="text"
+        id="day"
+        name="day"
+        required
+      >
 
       <label for="date">Date</label>
-      <input type="text" id="date" name="date" maxlength="15" required>
+      <input
+        type="text"
+        id="date"
+        name="date"
+        maxlength="15"
+        required
+      >
 
       <label for="start">Start</label>
-      <input type="text" id="start" name="start" maxlength="15" required>
+      <input
+        type="text"
+        id="start"
+        name="start"
+        maxlength="15"
+        required
+      >
 
       <label for="lunch">Lunch</label>
-      <input type="text" id="lunch" name="lunch" maxlength="15" required>
+      <input
+        type="text"
+        id="lunch"
+        name="lunch"
+        maxlength="15"
+        required
+      >
 
       <label for="end_time">End</label>
-      <input type="text" id="end_time" name="end_time" maxlength="15" required>
+      <input
+        type="text"
+        id="end_time"
+        name="end_time"
+        maxlength="15"
+        required
+      >
 
-      <button type="submit" id="addButton">Add Row</button>
+      <button type="submit" id="addButton">
+        Add Row
+      </button>
+
       <div id="addStatus" class="status"></div>
+
     </form>
   </section>
 
+
+  <!-- Timesheet -->
   <section>
+
     <h2>Timesheet</h2>
-    <button type="button" id="saveButton" disabled>Download PDF</button>
+
+    <button type="button" id="saveButton" disabled>
+      Download PDF
+    </button>
 
     <div class="table-wrap">
+
       <table>
+
         <thead>
           <tr>
             <th>Day of the Week</th>
@@ -103,98 +216,472 @@
             <th>End</th>
           </tr>
         </thead>
+
         <tbody id="recordsBody">
-          <tr><td colspan="5">No rows yet.</td></tr>
+          <tr>
+            <td colspan="5">No rows yet.</td>
+          </tr>
         </tbody>
+
       </table>
+
     </div>
+
   </section>
 
-  <!-- jsPDF + AutoTable build the PDF download in the browser -->
-  
+
+  <!-- Return to Main Page -->
+  <div class="return-link">
+    <h2>
+      <a href="https://main.d3aa0oh4rm4fbf.amplifyapp.com/">
+        Return to Main Page
+      </a>
+    </h2>
+  </div>
+
+
+  <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- jsPDF AutoTable -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  
+
+
   <script>
-    const API_URL = "https://2tsx3ma0h6.execute-api.us-east-1.amazonaws.com/default/timesheets";
+
+    /*
+     * ============================================================
+     * AWS API URL
+     * ============================================================
+     */
+
+    const API_URL =
+      "https://2tsx3ma0h6.execute-api.us-east-1.amazonaws.com/default/timesheets";
+
+
+    /*
+     * ============================================================
+     * Page elements
+     * ============================================================
+     */
+
     const addForm = document.getElementById("addForm");
     const addStatus = document.getElementById("addStatus");
+    const addButton = document.getElementById("addButton");
     const saveButton = document.getElementById("saveButton");
     const recordsBody = document.getElementById("recordsBody");
 
-    // Rows currently shown in the table, used by the PDF button
+
+    /*
+     * ============================================================
+     * Records currently displayed on the page
+     * ============================================================
+     */
+
     const records = [];
 
-    function setStatus(el, message, type) {
-      el.textContent = message;
-      el.className = "status" + (type ? " " + type : "");
+
+    /*
+     * ============================================================
+     * Status message
+     * ============================================================
+     */
+
+    function setStatus(element, message, type = "") {
+
+      element.textContent = message;
+
+      element.className =
+        "status" + (type ? " " + type : "");
+
     }
 
+
+    /*
+     * ============================================================
+     * Prevent HTML injection when displaying records
+     * ============================================================
+     */
+
     function escapeHtml(value) {
+
       return String(value ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
+
     }
+
+
+    /*
+     * ============================================================
+     * Display records in the table
+     * ============================================================
+     */
 
     function renderTable() {
-      recordsBody.innerHTML = records.map(r => `
+
+      if (records.length === 0) {
+
+        recordsBody.innerHTML = `
+          <tr>
+            <td colspan="5">No rows yet.</td>
+          </tr>
+        `;
+
+        saveButton.disabled = true;
+
+        return;
+      }
+
+
+      recordsBody.innerHTML = records.map(record => `
+
         <tr>
-          <td>${escapeHtml(r.day)}</td>
-          <td>${escapeHtml(r.date)}</td>
-          <td>${escapeHtml(r.start)}</td>
-          <td>${escapeHtml(r.lunch)}</td>
-          <td>${escapeHtml(r.end_time)}</td>
+
+          <td>${escapeHtml(record.day)}</td>
+
+          <td>${escapeHtml(record.date)}</td>
+
+          <td>${escapeHtml(record.start)}</td>
+
+          <td>${escapeHtml(record.lunch)}</td>
+
+          <td>${escapeHtml(record.end_time)}</td>
+
         </tr>
+
       `).join("");
-      saveButton.disabled = records.length === 0;
+
+
+      saveButton.disabled = false;
+
     }
 
-    // Builds a PDF of the table and downloads it
-    function saveRecords() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "letter" });
-      const today = new Date().toISOString().slice(0, 10);
 
-      doc.setFontSize(16);
-      doc.text("Timesheets", 40, 40);
-      doc.setFontSize(10);
-      doc.text(`Generated ${today}`, 40, 58);
+    /*
+     * ============================================================
+     * Save a row to AWS API
+     * ============================================================
+     */
 
-      doc.autoTable({
-        startY: 72,
-        head: [["Day", "Date", "Start", "Lunch", "End"]],
-        body: records.map(r => [r.day, r.date, r.start, r.lunch, r.end_time]),
-        styles: { fontSize: 9, cellPadding: 5, overflow: "linebreak" },
-        headStyles: { fillColor: [37, 99, 235] }
+    async function saveRecordToApi(record) {
+
+      const response = await fetch(API_URL, {
+
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify(record)
+
       });
 
-      doc.save(`timesheets-${today}.pdf`);
+
+      if (!response.ok) {
+
+        let errorMessage =
+          `API returned HTTP ${response.status}`;
+
+        try {
+
+          const errorData = await response.json();
+
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+
+        } catch (error) {
+          // Response wasn't JSON.
+        }
+
+        throw new Error(errorMessage);
+
+      }
+
+
+      /*
+       * Some Lambda/API Gateway configurations
+       * return no response body.
+       *
+       * Therefore we don't require JSON here.
+       */
+
+      return response;
+
     }
 
-    addForm.addEventListener("submit", (event) => {
+
+    /*
+     * ============================================================
+     * Add Row
+     * ============================================================
+     */
+
+    addForm.addEventListener("submit", async function(event) {
+
       event.preventDefault();
 
-      records.push({
-        day: document.getElementById("day").value.trim(),
-        date: document.getElementById("date").value.trim(),
-        start: document.getElementById("start").value.trim(),
-        lunch: document.getElementById("lunch").value.trim(),
-        end_time: document.getElementById("end_time").value.trim()
-      });
 
-      renderTable();
-      addForm.reset();
-      document.getElementById("day").focus();
-      setStatus(addStatus, "Row added.", "ok");
+      /*
+       * Collect form values
+       */
+
+      const record = {
+
+        day: document
+          .getElementById("day")
+          .value
+          .trim(),
+
+        date: document
+          .getElementById("date")
+          .value
+          .trim(),
+
+        start: document
+          .getElementById("start")
+          .value
+          .trim(),
+
+        lunch: document
+          .getElementById("lunch")
+          .value
+          .trim(),
+
+        end_time: document
+          .getElementById("end_time")
+          .value
+          .trim()
+
+      };
+
+
+      /*
+       * Show saving message
+       */
+
+      setStatus(
+        addStatus,
+        "Saving row...",
+        "loading"
+      );
+
+
+      /*
+       * Prevent double-clicks while saving
+       */
+
+      addButton.disabled = true;
+
+
+      try {
+
+        /*
+         * Send record to AWS
+         */
+
+        await saveRecordToApi(record);
+
+
+        /*
+         * Only add the row to the visible
+         * table AFTER AWS confirms success.
+         */
+
+        records.push(record);
+
+        renderTable();
+
+
+        /*
+         * Clear form
+         */
+
+        addForm.reset();
+
+        document
+          .getElementById("day")
+          .focus();
+
+
+        /*
+         * Success message
+         */
+
+        setStatus(
+          addStatus,
+          "Row saved successfully.",
+          "ok"
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Error saving timesheet:",
+          error
+        );
+
+
+        setStatus(
+          addStatus,
+          "Could not save the row. Check your AWS API and browser console.",
+          "error"
+        );
+
+      } finally {
+
+        addButton.disabled = false;
+
+      }
+
     });
 
-    saveButton.addEventListener("click", saveRecords);
+
+    /*
+     * ============================================================
+     * Create and download PDF
+     * ============================================================
+     */
+
+    function saveRecords() {
+
+      if (records.length === 0) {
+        return;
+      }
+
+
+      const { jsPDF } = window.jspdf;
+
+
+      const doc = new jsPDF({
+
+        orientation: "landscape",
+
+        unit: "pt",
+
+        format: "letter"
+
+      });
+
+
+      const today =
+        new Date()
+          .toISOString()
+          .slice(0, 10);
+
+
+      /*
+       * PDF title
+       */
+
+      doc.setFontSize(16);
+
+      doc.text(
+        "Timesheets",
+        40,
+        40
+      );
+
+
+      /*
+       * Generated date
+       */
+
+      doc.setFontSize(10);
+
+      doc.text(
+        `Generated ${today}`,
+        40,
+        58
+      );
+
+
+      /*
+       * Timesheet table
+       */
+
+      doc.autoTable({
+
+        startY: 72,
+
+        head: [[
+          "Day",
+          "Date",
+          "Start",
+          "Lunch",
+          "End"
+        ]],
+
+        body: records.map(record => [
+
+          record.day,
+          record.date,
+          record.start,
+          record.lunch,
+          record.end_time
+
+        ]),
+
+        styles: {
+
+          fontSize: 9,
+
+          cellPadding: 5,
+
+          overflow: "linebreak"
+
+        },
+
+        headStyles: {
+
+          fillColor: [
+            37,
+            99,
+            235
+          ]
+
+        }
+
+      });
+
+
+      /*
+       * Download PDF
+       */
+
+      doc.save(
+        `timesheets-${today}.pdf`
+      );
+
+    }
+
+
+    /*
+     * ============================================================
+     * PDF button
+     * ============================================================
+     */
+
+    saveButton.addEventListener(
+      "click",
+      saveRecords
+    );
+
+
+    /*
+     * ============================================================
+     * Initial table
+     * ============================================================
+     */
+
+    renderTable();
+
   </script>
-<h2>
-<a href="https://main.d3aa0oh4rm4fbf.amplifyapp.com/">Return to Main Page</a>
-</h2>
+
 </body>
 </html>
