@@ -391,8 +391,8 @@
 
           const errorData = await response.json();
 
-          if (errorData.message) {
-            errorMessage = errorData.message;
+          if (errorData.error || errorData.message) {
+            errorMessage = errorData.error || errorData.message;
           }
 
         } catch (error) {
@@ -529,7 +529,7 @@
 
         setStatus(
           addStatus,
-          "Could not save the row. Check your AWS API and browser console.",
+          "Could not save the row: " + error.message,
           "error"
         );
 
