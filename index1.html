@@ -38,7 +38,7 @@
       margin: 10px 0 4px;
     }
 
-select {
+    select {
   width: 100%;
   box-sizing: border-box;
   padding: 8px;
@@ -47,7 +47,7 @@ select {
   border-radius: 4px;
   background: #fff;
 }
-    
+
     input {
       width: 100%;
       box-sizing: border-box;
@@ -149,8 +149,7 @@ select {
     <h2>Add a Row</h2>
 
     <form id="addForm">
-
-      <label for="day">Day of the Week</label>
+<label for="day">Day of the Week</label>
       <select name=days id ="day">
       <option value ="Sunday">Sunday</option>
       <option value ="Monday">Monday</option>
@@ -166,7 +165,6 @@ select {
         type="date"
         id="date"
         name="date"
-        maxlength="15"
         required
       >
 
@@ -215,6 +213,8 @@ select {
     <button type="button" id="saveButton" disabled>
       Download PDF
     </button>
+
+    <div id="loadStatus" class="status"></div>
 
     <div class="table-wrap">
 
@@ -283,6 +283,7 @@ select {
     const addButton = document.getElementById("addButton");
     const saveButton = document.getElementById("saveButton");
     const recordsBody = document.getElementById("recordsBody");
+    const loadStatus = document.getElementById("loadStatus");
 
 
     /*
@@ -370,6 +371,77 @@ select {
 
 
       saveButton.disabled = false;
+
+    }
+
+
+    /*
+     * ============================================================
+     * Fetch existing rows from AWS API
+     * ============================================================
+     */
+
+    async function loadRecords() {
+
+      setStatus(
+        loadStatus,
+        "Loading rows...",
+        "loading"
+      );
+
+
+      try {
+
+        const response = await fetch(API_URL);
+
+
+        if (!response.ok) {
+          throw new Error(
+            `API returned HTTP ${response.status}`
+          );
+        }
+
+
+        /*
+         * The API returns:
+         * { "records": [ { day, date, start, lunch, end_time }, ... ] }
+         */
+
+        const data = await response.json();
+
+        const rows = Array.isArray(data)
+          ? data
+          : (data.records || []);
+
+
+        /*
+         * Replace the contents of the array
+         * (records is a const, so empty it
+         * rather than reassigning it).
+         */
+
+        records.length = 0;
+
+        records.push(...rows);
+
+        renderTable();
+
+        setStatus(loadStatus, "");
+
+      } catch (error) {
+
+        console.error(
+          "Error loading timesheets:",
+          error
+        );
+
+        setStatus(
+          loadStatus,
+          "Could not load rows: " + error.message,
+          "error"
+        );
+
+      }
 
     }
 
@@ -693,6 +765,15 @@ select {
      */
 
     renderTable();
+
+
+    /*
+     * ============================================================
+     * Fetch the rows already saved in AWS
+     * ============================================================
+     */
+
+    loadRecords();
 
   </script>
 
