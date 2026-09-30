@@ -125,6 +125,12 @@
       background: #2563eb;
     }
 
+    .delete-button {
+      margin-top: 0;
+      padding: 4px 12px;
+      background: #b91c1c;
+    }
+
     .return-link {
       margin-top: 20px;
     }
@@ -227,12 +233,13 @@
             <th>Start</th>
             <th>Lunch</th>
             <th>End</th>
+            <th>Delete</th>
           </tr>
         </thead>
 
         <tbody id="recordsBody">
           <tr>
-            <td colspan="5">No rows yet.</td>
+            <td colspan="6">No rows yet.</td>
           </tr>
         </tbody>
 
@@ -341,7 +348,7 @@
 
         recordsBody.innerHTML = `
           <tr>
-            <td colspan="5">No rows yet.</td>
+            <td colspan="6">No rows yet.</td>
           </tr>
         `;
 
@@ -351,7 +358,7 @@
       }
 
 
-      recordsBody.innerHTML = records.map(record => `
+      recordsBody.innerHTML = records.map((record, index) => `
 
         <tr>
 
@@ -364,6 +371,16 @@
           <td>${escapeHtml(record.lunch)}</td>
 
           <td>${escapeHtml(record.end_time)}</td>
+
+          <td>
+            <button
+              type="button"
+              class="delete-button"
+              data-index="${index}"
+            >
+              Delete
+            </button>
+          </td>
 
         </tr>
 
@@ -499,6 +516,159 @@
       return response;
 
     }
+
+
+    /*
+     * ============================================================
+     * Delete a row through AWS API
+     * ============================================================
+     *
+     * Sent as a POST with action "delete" because the
+     * API Gateway CORS settings only allow GET and POST.
+     */
+
+    async function deleteRecordFromApi(record) {
+
+      const response = await fetch(API_URL, {
+
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          action: "delete",
+          ...record
+        })
+
+      });
+
+
+      if (!response.ok) {
+
+        let errorMessage =
+          `API returned HTTP ${response.status}`;
+
+        try {
+
+          const errorData = await response.json();
+
+          if (errorData.error || errorData.message) {
+            errorMessage = errorData.error || errorData.message;
+          }
+
+        } catch (error) {
+          // Response wasn't JSON.
+        }
+
+        throw new Error(errorMessage);
+
+      }
+
+
+      return response;
+
+    }
+
+
+    /*
+     * ============================================================
+     * Delete buttons
+     * ============================================================
+     */
+
+    recordsBody.addEventListener("click", async function(event) {
+
+      const button =
+        event.target.closest(".delete-button");
+
+      if (!button) {
+        return;
+      }
+
+
+      const record =
+        records[Number(button.dataset.index)];
+
+      if (!record) {
+        return;
+      }
+
+
+      const confirmed = confirm(
+        `Delete the row for ${record.day} ${record.date}?`
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+
+      setStatus(
+        loadStatus,
+        "Deleting row...",
+        "loading"
+      );
+
+      button.disabled = true;
+
+
+      try {
+
+        await deleteRecordFromApi(record);
+
+
+        /*
+         * Only remove the row from the visible
+         * table AFTER AWS confirms success.
+         *
+         * The Lambda deletes every row that matches
+         * all five values, so remove exact duplicates
+         * from the page as well.
+         */
+
+        const remaining = records.filter(row =>
+          !(
+            row.day === record.day &&
+            row.date === record.date &&
+            row.start === record.start &&
+            row.lunch === record.lunch &&
+            row.end_time === record.end_time
+          )
+        );
+
+        records.length = 0;
+
+        records.push(...remaining);
+
+        renderTable();
+
+
+        setStatus(
+          loadStatus,
+          "Row deleted.",
+          "ok"
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Error deleting timesheet row:",
+          error
+        );
+
+        setStatus(
+          loadStatus,
+          "Could not delete the row: " + error.message,
+          "error"
+        );
+
+        button.disabled = false;
+
+      }
+
+    });
 
 
     /*
